@@ -1,43 +1,67 @@
 package ru.dmitriidaragan.todo.resource;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Resource;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.xml.bind.JAXBElement;
-import org.springframework.web.bind.annotation.*;
 import ru.dmitriidaragan.todo.entity.Task;
 import ru.dmitriidaragan.todo.service.TaskService;
 
 @Resource
-@RequestMapping("/tasks")
+@Path("tasks")
 public class TaskResource {
     private final TaskService taskService;
+
+    @Inject
     public TaskResource(TaskService taskService) {
         this.taskService = taskService;
     }
 
-    @GetMapping("{id}")
-    @Produces(MediaType.TEXT_XML)
-    public Task getTask(@PathVariable Long id) {
-        return taskService.get(id);
+    @Path("{id}")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTask(@PathParam("id") Long id) {
+        try {
+            return Response.ok(new ObjectMapper().writeValueAsString(taskService.get(id).orElse(new Task()))).build();
+        } catch (JsonProcessingException exception) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
     }
 
-    @PutMapping
-    @Consumes(MediaType.TEXT_XML)
-    public Response putTask(JAXBElement<Task> task) {
-        taskService.add(task.getValue());
+    @PUT
+    public Response putTask(@Context HttpHeaders headers) {
+        try {
+            String value = headers.getHeaderString("newTask");
+            Task task = new ObjectMapper().readValue(value, Task.class);
+            taskService.add(task);
+            return Response.ok().build();
+        } catch (JsonProcessingException exception) {
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+    }
+
+    @Path("{id}")
+    @DELETE
+    public Response deleteTask(@PathParam("id") Long id) {
+        taskService.delete(taskService.get(id).orElse(null));
         return Response.ok().build();
     }
 
-    @DeleteMapping("{id}")
-    public void deleteTask(@PathVariable Long id) {
-        taskService.delete(taskService.get(id));
-    }
-
-    @GetMapping
-    @Produces({MediaType.TEXT_XML})
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Response getAllTasks() {
         return Response.ok(taskService.getAll()).build();
+    }
+
+    @POST
+    @Path("{id}")
+    public Response setTaskState(@PathParam("id") Long id, @QueryParam("checked") Boolean isChecked) {
+        taskService.setTaskState(id, isChecked);
+        return Response.ok().build();
     }
 }

@@ -3,6 +3,7 @@ package ru.dmitriidaragan.todo;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,7 @@ import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
+@EnableAutoConfiguration
 @ComponentScan("ru.dmitriidaragan.todo")
 @PropertySource("classpath:application.properties")
 @EnableJpaRepositories("ru.dmitriidaragan.todo.repository")

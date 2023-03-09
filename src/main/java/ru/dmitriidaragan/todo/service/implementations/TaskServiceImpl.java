@@ -6,6 +6,7 @@ import ru.dmitriidaragan.todo.repository.TaskRepository;
 import ru.dmitriidaragan.todo.service.TaskService;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class TaskServiceImpl implements TaskService {
@@ -25,8 +26,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public Task get(Long id) {
-        return taskRepository.getReferenceById(id);
+    public Optional<Task> get(Long id) {
+        return taskRepository.findById(id);
     }
 
     @Override
@@ -37,5 +38,13 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<Task> getAll() {
         return taskRepository.findAll();
+    }
+
+    @Override
+    public void setTaskState(Long id, Boolean isChecked) {
+        get(id).ifPresent((task) -> {
+            task.setCrossed(isChecked);
+            taskRepository.saveAndFlush(task);
+        });
     }
 }
